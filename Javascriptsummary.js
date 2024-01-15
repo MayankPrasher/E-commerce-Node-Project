@@ -70,12 +70,12 @@
 // console.log(user.greet);
 // output:[Function: greet]
 // { name: 'Mayank', age: 22, greet: [Function: greet] }
-// const user ={
-//         name : 'Mayank',
-//         age : 22,
-//         greet(){console.log("Hi I'm "+this.name)}
-//     }
-// user.greet();
+const user ={
+        name : 'Mayank',
+        age : 22,
+        greet(){console.log("Hi I'm "+this.name)}
+    }
+user.greet();
 // output:Hi I'm Mayank
 //AARAYS and it's functions////
 // const hobbies = ['cricket','singing','guitar'];
