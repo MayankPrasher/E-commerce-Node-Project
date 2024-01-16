@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+html(lang="en")
+    head
+        meta(charset="UTF-8")
+        meta(name="viewport", content="width=device-width, initial-scale=1.0")
+        meta(http-equiv="X-UA-Compatible", content="ie=edge")
+        title #{docTitle}
+        link(rel="stylesheet", href="/css/main.css")
+        link(rel="stylesheet", href="/css/product.css")
+    body
+        header.main-header
+            nav.main-header__nav
+                ul.main-header__item-list
+                    li.main-header__item
+                        a.active(href="/") Shop
+                    li.main-header__item
+                        a(href="/admin/add-product") Add Product
+
+        main
+            if products.length > 0
+                .grid
+                    each product in products
+                        article.card.product-item
+                            header.card__header
+                                h1.product__title #{product.title}
+                            div.card__image
+                                img(src="data:image/jpeg;base64,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", alt="A vegetable")
+                            div.card__content
+                                h2.product__price ₹20.00
+                                p.product__description totally fresh get it from ur nearby shopkeeper!
+                            .card__actions
+                                button.btn Add to Cart
+            else
+                h1 No Products
