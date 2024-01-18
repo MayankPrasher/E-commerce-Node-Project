@@ -1,9 +1,9 @@
-<%- include('includes/head.ejs')%>
+<%- include('../includes/head.ejs')%>
     <link rel="stylesheet" href="/css/product.css">
 </head>
 
 <body>
-    <%- include('includes/navigation.ejs') %>
+    <%- include('../includes/navigation.ejs') %>
 
     <main>
         <% if(products.length > 0 ){ %>
@@ -14,14 +14,15 @@
                     <h1 class="product__title"><%= product.title %></h1>
                 </header>
                 <div class="card__image">
-                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTBmBX_024PTFUgYOdPxWBGPyVlkaMfj3TPYQ&usqp=CAU" alt="A wire">
+                    <img src="<%= product.imageUrl %>" alt="<%= product.title %>" height="300px" width="300px">
                 </div>
                 <div class="card__content">
-                    <h2 class="product__price">₹200.00</h2>
-                    <p class="product__description">A very reliable and fire resistent wire</p>
+                    <h2 class="product__price">₹<%= product.price %></h2>
+                    <p class="product__description"><%= product.desc %></p>
                 </div>
                 <div class="card__actions">
-                    <button class="btn">Add to Cart</button>
+                    <a href="/products/<%= product.id%>" class="btn">Details</a>
+                    <%- include('../includes/add-to-cart.ejs',{product:product}) %>
                 </div>
             </article>
             <%}%>
@@ -30,4 +31,4 @@
             <h1>No Products found</h1>
         <% } %>
     </main>
-<%- include('includes/end.ejs') %>
+<%- include('../includes/end.ejs') %>
