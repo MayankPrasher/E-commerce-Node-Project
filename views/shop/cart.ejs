@@ -4,24 +4,40 @@
 <body>
     <%- include('../includes/navigation.ejs') %>
     <main>
-        <% if(products.length>0){%>
-            <ul>
+        <% let total = 0 %>
+        <% if(products.length>0){ %>
+            <ul class="list-container">
                 <% products.forEach(p =>{ %>
-                    <li>
-                       <p><%= p.productId.title %>(<%= p.quantity %>)</p> 
-                       <form action="/deleteCartproduct" method="POST">
-                           <input type="hidden" name="productId" value="<%=p.productId._id%>">
-                           <button class="btn" type="submit">Delete</button>
-                       </form>
+                    <li class="list-item-cart">
+                        <div class="item-image">
+                        <img src="<%= p.productId.imageUrl %>" alt="" width="80px" height="80px">
+                        </div>
+                        <div class="info-div">
+                        <p><%= p.productId.title %> X <%= p.quantity %></p>
+                        
+                    </div>
+                       <div class="delete-div"> <form action="/deleteCartproduct" method="POST">
+                        <input type="hidden" name="productId" value="<%=p.productId._id%>">
+                        <button class="btn" style="background-color: red !important; color: white;" type="submit">Delete</button>
+                    </form></div>
+                    <div class="price-div">
+                        ₹<%=  p.quantity * p.productId.price %>
+                    </div>
                     </li>
+                    <% total = total + (p.productId.price * p.quantity ) %>
                  <% }) %>   
             </ul>
-            <hr>
-<form action="/orders" method="POST">
-<button type="submit" class="btn">
-    Order !
-</button>
-</form>
+             <div class="total-price-div">
+                <center><h3>Grand Total : <%= total %></h3></center>
+             </div>
+            <center>
+                <form action="/orders" method="POST">
+                    <button type="submit" class="btn">
+                        Order !
+                    </button>
+                    </form>
+            </center>
+
             <% } else { %>
                 <h1>No products found</h1>
                 <% } %>

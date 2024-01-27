@@ -8,15 +8,30 @@
             <% if (orders.length <= 0) { %>
                 <h1>Nothing there!</h1>
             <% } else { %>
-                <ul class="orders">
+                <ul class="orders" style="list-style-type: none;">
                     <% orders.forEach(order => { %>
                         <li class="orders__item">
-                            <h1>Order - # <%= order._id %></h1>
-                            <ul class="orders__products">
+                           <div class="Order-header-div"><center><h2>Order - # <%= order._id %></h2></center></div> 
+                           <div class="parent-div-products">
+                           <div class="orders__products-div">
+                            <ul class="orders__products" style="list-style-type: none;" >
                                 <% order.products.forEach(product => { %>
-                                    <li class="orders__products-item"><%= product.product.title %>  (<%= product.quantity %>)</li>
+                                    <li class="orders__products-item"><%= product.product.title %> X <%= product.quantity %></li>
                                 <% }); %>
                             </ul>
+                           </div>
+                           <div class="pricing-div-order">
+                            <center>
+                            <ul>
+                                <% order.products.forEach(product => { %>
+                                    <li class="orders__products-item" style="list-style-type: none;">₹<%= product.product.price %></li>
+                                <% }); %>
+                            </ul>
+                        </center>
+                           </div>
+                        </div>
+
+                           
                         </li>
                     <% }); %>
                 </ul>

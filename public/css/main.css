@@ -60,6 +60,72 @@ form {
   color: #ffeb3b;
 }
 
+.list-container{
+  width: 100%;
+  padding:10px;
+}
+.list-item-cart{
+  width: 100%;
+  height:80px;
+  border: 1px black solid;
+  display: flex;
+  flex-direction: row;
+ /* padding: 20px; */
+ align-items: center;
+ margin:8px;
+ border-radius: 10px;
+}
+.list-item-cart .item-image{
+width: 20%;
+height: 100%;
+overflow: hidden;
+padding-left: 20px;
+}
+.list-item-cart .info-div{
+ width:60%;
+ height:100%;
+ text-align: center;
+ padding-top: 5px;
+ 
+}
+.list-item-cart .info-div p{
+  font-size:20px;
+}
+.list-item-cart .price-div{
+  width: 10%;
+  height: 100%;
+  text-align: center;
+  padding-top:28px ;
+}
+.total-price-div{
+  width: 100%;
+  height:60px;
+  border: 1px black solid;
+  margin-bottom:10px;
+}
+
+.Order-header-div{
+  width: 100%;
+  background-color: rgb(217, 237, 255);
+  margin:0;
+}
+.orders__products-div{
+  width: 80%;
+  margin: 0;
+  
+}
+.parent-div-products{
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  background-color: #a5f1a5;
+  border: 1px solid rgb(46, 215, 46);
+}
+.pricing-div-order{
+  width: 20%;
+  border-left:1px dotted red ;
+}
+
 .mobile-nav {
   width: 30rem;
   height: 100vh;
