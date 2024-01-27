@@ -1,4 +1,5 @@
 const Product = require('../models/product');
+const User = require('../models/user');
 // // const mongodb = require('mongodb');
 
 exports.getAddproduct = (req, res, next)=>{
@@ -17,7 +18,8 @@ exports.postAddproduct=(req, res, next)=>{
         title:title,
         imageUrl:imageUrl,
         price:price,
-        description:desc
+        description:desc,
+        userId:req.user
     });
     product.save()
       .then(result => {
