@@ -8,7 +8,8 @@ exports.getIndex=(req,res,next)=>{
         res.render('shop/index',{
             products:products,
             pageTitle:'Shop',
-            path:'/'
+            path:'/',
+            isAuthenticated:req.session.isLoggedIn
         });
     }
    ).catch(
@@ -24,7 +25,8 @@ exports.getProducts=(req, res, next)=>{
             res.render('shop/product-list',{
                 products:products,
                 pageTitle:'All products',
-                path:'/products'
+                path:'/products',
+                isAuthenticated:req.session.isLoggedIn
             });
         }
        ).catch(
@@ -41,7 +43,8 @@ exports.getProduct=(req,res,next)=>{
         res.render('shop/product-details',{
           product : product,
           pageTitle:'product',
-          path:'product-detail'
+          path:'product-detail',
+          isAuthenticated:req.session.isLoggedIn
         });
        
     }).catch(err=>console.log(err));
@@ -49,14 +52,14 @@ exports.getProduct=(req,res,next)=>{
 exports.getCart=(req,res,next)=>{
     req.user
     .populate('cart.items.productId')
-    // .execPopulate()
     .then(user=>{
             const products =user.cart.items;
             console.log(products);
             res.render('shop/cart',{
                             path:'/cart',
                             pageTitle:'Your cart',
-                            products:products
+                            products:products,
+                            isAuthenticated:req.session.isLoggedIn
                        });
     })
     .catch(err=>console.log(err));
@@ -69,7 +72,6 @@ exports.postCart = (req, res, next) => {
         return req.user.addToCart(product);
       })
       .then(result => {
-        console.log(result);
         res.redirect('/cart');
       });
 }
@@ -116,7 +118,8 @@ exports.postdeleteCartproduct =(req,res,next)=>{
             res.render('shop/order',{
                 path:'shop/orders',
                 pageTitle:'Your Orders',
-                orders:orders
+                orders:orders,
+                isAuthenticated:req.session.isLoggedIn
             })
         })
              
