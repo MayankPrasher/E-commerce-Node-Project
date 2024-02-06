@@ -6,26 +6,31 @@
 <body>
     <%- include('../includes/navigation.ejs')%>
     <main>
+        <% if(errorMessage){%>
+            <div class="user-message user-message--error"><%= errorMessage %></div>
+            <%}%>
         <form class="product-form" action="<% if(editing) {%>/admin/edit-products<% } else { %>/admin/add-product<% } %>" method="POST">
             <div class="form-control">
                 <label for="title">Title</label>
-                <input type="text" name="title" id="title" value="<% if(editing) {%> <%=product.title%><%} %>">
+                <input type="text" name="title" id="title" value="<% if(editing || hasError) {%> <%=product.title%><%} %>"
+                class="<%= validationErrors.find(e=>e.path ==='title') ? 'invalid' : '' %>">
             </div>
             <div class="form-control">
                 <label for="imageUrl">Image URL</label>
-                <input type="text" name="imageUrl" id="imageUrl" value="<% if(editing) {%> <%=product.imageUrl%><%} %>">
+                <input type="text" name="imageUrl" id="imageUrl" value="<% if(editing || hasError) {%> <%=product.imageUrl%><%} %>"
+                class="<%= validationErrors.find(e=>e.path ==='imageUrl') ? 'invalid' : '' %>">
             </div>
             <div class="form-control">
                 <label for="description">Description</label>
                 <!-- <input type="textare" name="title" id="title"> -->
-                <textarea name="desc" id="desc" rows="5"><% if(editing) {%> <%= product.description%> <%} %></textarea>
+                <textarea name="desc" id="desc" rows="5"class="<%= validationErrors.find(e=>e.path ==='desc') ? 'invalid' : '' %>"><% if(editing || hasError) {%> <%= product.description%> <%} %></textarea>
             </div>
             <div class="form-control">
                 <label for="price">Price</label>
-                <input type="number" name="price" id="price" step="0.01" value="<% if(editing) {%><%=product.price%><% } %>">
+                <input type="number" name="price" id="price" step="0.01" value="<% if(editing || hasError) {%><%=product.price%><% } %>"class="<%= validationErrors.find(e=>e.path ==='price') ? 'invalid' : '' %>">
             </div>
             <% if(editing) { %>
-            <input type="hidden" name="id" value="<%=product._id%>">
+            <input type="hidden" name="id" value="<%= product.id %>">
             <% }%>
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <button class="btn" type="submit"><% if(editing) { %> Edit Product <% } else { %> Add Product <% } %></button>

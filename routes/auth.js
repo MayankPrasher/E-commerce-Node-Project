@@ -6,7 +6,30 @@ const IsAuth = require('../middleware/isAuth');
 const User = require('../models/user');
 
 router.get('/login',authController.getLogin);
-router.post('/login',authController.postLogin);
+
+router.post('/login',[
+    check('email')
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('Enter the valid email.'),
+    // .custom((value,{req})=>{
+    // User.findOne({email:value})
+    // .then(user=>{
+    //     if(!user){
+    //         return Promise.reject('User not exists!!!');
+    //     }
+    // })
+    // .catch(err=>console.log(err))
+    // }),
+    body('password',
+    'Enter password with atleast 5 characters without special characters.')
+    .isLength({min:5})
+    .isAlphanumeric()
+    .trim()
+]
+,authController.postLogin);
+
+
 router.post('/logout',authController.postLogout);
 router.get('/signup',authController.getSignup);
 
@@ -15,6 +38,7 @@ router.post('/signup',
 check('email')
 .isEmail()
 .withMessage('Enter the valid email.')
+.normalizeEmail()
 .custom((value,{req})=>{
     return User.findOne({email:value})
     .then(userInfo=>{
@@ -26,8 +50,9 @@ check('email')
 body('password',
 'Enter password with atleast 5 characters without special characters.')
 .isLength({min:5})
-.isAlphanumeric(),
-body('confirmPassword').custom((value,{req})=>{
+.isAlphanumeric()
+.trim(),
+body('confirmPassword').trim().custom((value,{req})=>{
     if(value !== req.body.password){
         throw new Error('Passwords doesnt match!');
     }

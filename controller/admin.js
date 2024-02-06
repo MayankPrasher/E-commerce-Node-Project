@@ -1,5 +1,6 @@
 const Product = require('../models/product');
 const User = require('../models/user');
+const {validationResult} = require('express-validator');
 // // const mongodb = require('mongodb');
 
 exports.getAddproduct = (req, res, next)=>{
@@ -7,7 +8,10 @@ exports.getAddproduct = (req, res, next)=>{
         pageTitle:'Add Product',
         path:'/admin/add-product',
         editing:false,
-        isAuthenticated:req.session.isLoggedIn
+        hasError:false,
+        errorMessage:null,
+        isAuthenticated:req.session.isLoggedIn,
+        validationErrors:[]
         });
 };
 exports.postAddproduct=(req, res, next)=>{
@@ -15,6 +19,27 @@ exports.postAddproduct=(req, res, next)=>{
     const imageUrl = req.body.imageUrl;
     const price = req.body.price;
     const desc = req.body.desc;
+    const errors = validationResult(req);
+    if(!errors.isEmpty()){
+        console.log(errors.array());
+       return res.status(422).render('admin/edit-products',{
+            pageTitle:'Add product',
+            path:'/admin/edit-products',
+            editing : false,
+            hasError:true,
+            product:{
+                title:title,
+                imageUrl:imageUrl,
+                price:price,
+                description:desc
+            },
+            isAuthenticated:req.session.isLoggedIn,
+            errorMessage:errors.array()[0].msg,
+            validationErrors:errors.array()
+        });
+
+    }
+
     const product = new Product({
         title:title,
         imageUrl:imageUrl,
@@ -40,6 +65,7 @@ exports.getProducts = (req,res,next)=>{
                     products:products,
                     pageTitle:'All products',
                     path:'/admin/products',
+                    hasError:false,
                     isAuthenticated:req.session.isLoggedIn
                 });
             }
@@ -58,6 +84,7 @@ exports.getEditproduct = (req, res, next)=>{
         }
         const productId = req.params.productId;
         // Product.findByPk(productId)
+        const errors = validationResult(req);
         Product.findById(productId)
         .then(product=>{
             if(!product){
@@ -67,8 +94,11 @@ exports.getEditproduct = (req, res, next)=>{
                 pageTitle:'Edit product',
                 path:'/admin/edit-products',
                 editing : edit,
+                hasError:false,
                 product:product,
-                isAuthenticated:req.session.isLoggedIn
+                errorMessage:null,
+                isAuthenticated:req.session.isLoggedIn,
+                validationErrors:errors.array()
             });
         })
         .catch(err=>console.log(err));
@@ -80,6 +110,27 @@ exports.postEditproduct=(req,res,next)=>{
     const updatedimgUrl = req.body.imageUrl;
     const updateddesc = req.body.desc;
     const updatedprice = req.body.price;
+    const errors = validationResult(req);
+    if(!errors.isEmpty()){
+        console.log(errors.array());
+       return res.status(422).render('admin/edit-products',{
+            pageTitle:'Edit product',
+            path:'/admin/edit-products',
+            editing : true,
+            hasError:true,
+            product:{
+                title:updatedtitle,
+                imageUrl:updatedimgUrl,
+                price:updatedprice,
+                description:updateddesc,
+                id:productId
+            },
+            isAuthenticated:req.session.isLoggedIn,
+            errorMessage:errors.array()[0].msg,
+            validationErrors:errors.array()
+        });
+
+    }
     // Product.findByPk(productId)
   Product.findById(productId).then(
     product=>{
