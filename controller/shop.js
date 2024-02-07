@@ -14,7 +14,9 @@ exports.getIndex=(req,res,next)=>{
     }
    ).catch(
     err=>{
-        console.log(err);
+        const error = new Error(err);
+        error.httpsStatusCode = 500;
+        return next(error);
     }
    ); 
     
@@ -31,7 +33,9 @@ exports.getProducts=(req, res, next)=>{
         }
        ).catch(
         err=>{
-            console.log(err);
+            const error = new Error(err);
+            error.httpsStatusCode = 500;
+            return next(error);
         }
        ); 
 };
@@ -47,7 +51,11 @@ exports.getProduct=(req,res,next)=>{
           isAuthenticated:req.session.isLoggedIn
         });
        
-    }).catch(err=>console.log(err));
+    }).catch(err=>{
+        const error = new Error(err);
+        error.httpsStatusCode = 500;
+        return next(error);
+    });
 };
 exports.getCart=(req,res,next)=>{
     req.user
@@ -62,7 +70,9 @@ exports.getCart=(req,res,next)=>{
                             isAuthenticated:req.session.isLoggedIn
                        });
     })
-    .catch(err=>console.log(err));
+    .catch(err=>{ const error = new Error(err);
+        error.httpsStatusCode = 500;
+        return next(error);});
 };
 
 exports.postCart = (req, res, next) => {
@@ -82,7 +92,9 @@ exports.postdeleteCartproduct =(req,res,next)=>{
         .then(result=>{
             res.redirect('/cart');
         })
-        .catch(err=>console.log(err));
+        .catch(err=>{ const error = new Error(err);
+            error.httpsStatusCode = 500;
+            return next(error);});
     };
 
     exports.postOrders = (req,res,next)=>{
@@ -108,7 +120,9 @@ exports.postdeleteCartproduct =(req,res,next)=>{
      .then(()=>{
         res.redirect('/orders');
      })
-     .catch(err=>console.log(err));
+     .catch(err=>{ const error = new Error(err);
+        error.httpsStatusCode = 500;
+        return next(error);});
     };
 
     exports.getOrders=(req,res,next)=>{

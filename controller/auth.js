@@ -14,6 +14,7 @@ const transporter = nodemailer.createTransport({
         pass: '6qhnCSKuejbqGUX2Rc'
     }
 });
+
 exports.getLogin = (req,res,next)=>{
     // const isLoggedIn = req.get('Cookie').split('=')[1];
     // console.log(req.session.isLoggedIn);
@@ -66,7 +67,9 @@ exports.postLogin = (req,res,next)=>{
         });
    
 })
-.catch(err=>console.log(err));
+.catch(err=>{ const error = new Error(err);
+    error.httpsStatusCode = 500;
+    return next(error);});
 }
 exports.postLogout = (req,res,next)=>{
     req.session.destroy(
@@ -131,7 +134,9 @@ exports.postSignup = (req,res,next)=>{
         subject:"Signup succeeded!",
         html:'<h1>You successfully signed up!'
     }).catch(err=>{
-       console.log(err);
+        const error = new Error(err);
+        error.httpsStatusCode = 500;
+        return next(error);
     });
    
 })
@@ -183,7 +188,9 @@ crypto.randomBytes(32,(err,Buffer)=>{
         });
     })
     .catch((err=>{
-        console.log(err);
+        const error = new Error(err);
+            error.httpsStatusCode = 500;
+            return next(error);
     }));
     
 })
@@ -209,7 +216,9 @@ exports.getNewPassword = (req,res,next)=>{
             });
     })
     .catch((err)=>{
-        console.log(err);
+        const error = new Error(err);
+        error.httpsStatusCode = 500;
+        return next(error);
     });
    
     
@@ -240,6 +249,8 @@ exports.postnewPassword = (req,res,next)=>{
     res.redirect('/login');
 })
 .catch((err)=>{
-    console.log(err);
+    const error = new Error(err);
+    error.httpsStatusCode = 500;
+    return next(error);
 })
 }
