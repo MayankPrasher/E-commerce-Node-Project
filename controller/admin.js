@@ -1,5 +1,7 @@
+const product = require('../models/product');
 const Product = require('../models/product');
 const User = require('../models/user');
+const fileHelper = require('../util/file');
 const {validationResult} = require('express-validator');
 // // const mongodb = require('mongodb');
 
@@ -16,9 +18,26 @@ exports.getAddproduct = (req, res, next)=>{
 };
 exports.postAddproduct=(req, res, next)=>{
     const title = req.body.title;
-    const imageUrl = req.body.imageUrl;
+    const image = req.file;
     const price = req.body.price;
     const desc = req.body.desc;
+    if(!image){
+        return res.status(422).render('admin/edit-products',{
+            pageTitle:'Add product',
+            path:'/admin/edit-products',
+            editing : false,
+            hasError:true,
+            product:{
+                title:title,
+                price:price,
+                description:desc
+            },
+            isAuthenticated:req.session.isLoggedIn,
+            errorMessage:'Attach jpg/png/jpeg files only',
+            validationErrors:[]
+        });
+
+    }
     const errors = validationResult(req);
     if(!errors.isEmpty()){
         console.log(errors.array());
@@ -39,7 +58,7 @@ exports.postAddproduct=(req, res, next)=>{
         });
 
     }
-
+    const imageUrl = image.path;
     const product = new Product({
         title:title,
         imageUrl:imageUrl,
@@ -118,7 +137,7 @@ exports.getEditproduct = (req, res, next)=>{
 exports.postEditproduct=(req,res,next)=>{
     const productId = req.body.id;
     const updatedtitle = req.body.title;
-    const updatedimgUrl = req.body.imageUrl;
+    const image = req.file;
     const updateddesc = req.body.desc;
     const updatedprice = req.body.price;
     const errors = validationResult(req);
@@ -131,7 +150,6 @@ exports.postEditproduct=(req,res,next)=>{
             hasError:true,
             product:{
                 title:updatedtitle,
-                imageUrl:updatedimgUrl,
                 price:updatedprice,
                 description:updateddesc,
                 id:productId
@@ -145,10 +163,13 @@ exports.postEditproduct=(req,res,next)=>{
     // Product.findByPk(productId)
   Product.findById(productId).then(
     product=>{
-        product.title = updatedtitle,
-        product.imageUrl = updatedimgUrl,
-        product.description = updateddesc,
-        product.price = updatedprice
+        product.title = updatedtitle;
+        if(image){
+            fileHelper.deleteFile(product.imageUrl);
+            product.imageUrl = image.path;
+        }
+        product.description = updateddesc;
+        product.price = updatedprice;
         return product.save()
     }
   ).then(result=>{
@@ -161,13 +182,23 @@ exports.postEditproduct=(req,res,next)=>{
 }
 exports.postDeleteproduct=(req,res,next)=>{
     const productId = req.body.id;
-    Product.findByIdAndDelete(productId)
-    .then(result=>{
+    Product.findById(productId).then(
+        product => {
+            if(!product){
+                return next(new Error('Product not Found.'));
+            }
+            fileHelper.deleteFile(product.imageUrl);
+            return Product.findByIdAndDelete(productId);
+        }
+    ).then(result=>{
         console.log('DESTROYED PRODUCT');
         res.redirect('/admin/products');
     })
     .catch(err=>{ const error = new Error(err);
         error.httpsStatusCode = 500;
         return next(error)});
+    
+    
+    
 }
 
