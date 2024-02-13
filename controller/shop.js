@@ -1,21 +1,24 @@
 const fs = require('fs');
 const path = require('path');
-const stripe = require('stripe')('sk_test_51OizmjSJO9ruBYianYCNvo8IMGhOm3VL5i5tW8gKfgUHx9RMoX4oowg3KCF8aEzOOGiFH5bvuEwvyoWoAlEv6t1A00i9OMew0B');
+// const stripe = require('stripe')('sk_test_51OizmjSJO9ruBYianYCNvo8IMGhOm3VL5i5tW8gKfgUHx9RMoX4oowg3KCF8aEzOOGiFH5bvuEwvyoWoAlEv6t1A00i9OMew0B');
+const crypto = require('crypto');
+const axios = require('axios');
 const Product = require('../models/product');
 const User = require('../models/user');
 const Order = require('../models/order');
 const PDFDocument = require('pdfkit');
 const session = require('express-session');
-const customer = stripe.customers.create({
-    name: 'Jenny Rosen',
-    address: {
-      line1: '510 Townsend St',
-      postal_code: '98140',
-      city: 'San Francisco',
-      state: 'CA',
-      country: 'US',
-    },
-  });
+
+// const customer = stripe.customers.create({
+//     name: 'Jenny Rosen',
+//     address: {
+//       line1: '510 Townsend St',
+//       postal_code: '98140',
+//       city: 'San Francisco',
+//       state: 'CA',
+//       country: 'US',
+//     },
+//   });
 const itemsPerPage = 2;
 exports.getIndex=(req,res,next)=>{
    const page = +req.query.page||1;
@@ -158,13 +161,20 @@ exports.postdeleteCartproduct =(req,res,next)=>{
                     },
                     products:products
                 });
-               return order.save();
-        }) .then(result=>{
-            return req.user.clearCart();
-     })
-     .then(()=>{
-        res.redirect('/orders');
-     })
+                res.redirect("/checkout");
+                // res.render('shop/checkout',{
+                //     path:'shop/checkout',
+                //     pageTitle:'Checkout',
+                //     isAuthenticated:req.session.isLoggedIn
+                // })
+               return order.save()
+               
+        }) 
+    //  .then(()=>{
+        
+        // Order.find({'user.userId':req.user._id})
+        // res.redirect('/checkout/'+req.user);
+    //  })
      .catch(err=>{ const error = new Error(err);
         error.httpsStatusCode = 500;
         return next(error);});
@@ -235,8 +245,28 @@ exports.getInvoice = (req,res,next) =>{
     }).catch(err=>next(err));
     
 };
-
-exports.getCheckout=(req,res,next)=>{
+exports.getCheckout = (req,res,next)=>{
+    let products;
+    let total = 0;
+    req.user
+    .populate('cart.items.productId')
+    .then(user=>{
+             products= user.cart.items;
+            //  console.log(products);
+             total = 0 ;
+            products.forEach(p=>{
+                total += p.quantity * p.productId.price;
+            })
+            res.render('shop/checkout',{
+                        path:'/checkout',
+                        pageTitle:'Checkout',
+                        products:products,
+                        totalSum:total,
+                        // sessionId: session.id
+                   });
+        })
+};
+exports.postCheckout=(req,res,next)=>{
     let products;
     let total = 0;
     req.user
@@ -246,36 +276,82 @@ exports.getCheckout=(req,res,next)=>{
              total = 0 ;
             products.forEach(p=>{
                 total += p.quantity * p.productId.price;
-            });
-            return stripe.checkout.sessions.create({
-               payment_method_types : ['card'],
-               line_items: products.map(p=>{
-                return {
-                    price_data :{
-                        currency : 'inr',
-                        unit_amount : p.productId.price,
-                        product_data:{
-                            name :p.productId.title,
-                            description:p.productId.desc,
-                        }
-                    },
-                    quantity : p.quantity,
+            })
+            // return stripe.checkout.sessions.create({
+            //    payment_method_types : ['card'],
+            //    line_items: products.map(p=>{
+            //     return {
+            //         price_data :{
+            //             currency : 'inr',
+            //             unit_amount : p.productId.price,
+            //             product_data:{
+            //                 name :p.productId.title,
+            //                 description:p.productId.desc,
+            //             }
+            //         },
+            //         quantity : p.quantity,
+            //     };
+            //    }),
+            //    mode: 'payment',
+            //    success_url : req.protocol + '://' + req.get('host') + '/checkout/success',
+            //    cancel_url : req.protocol + '://' + req.get('host') + '/checkout/cancel'
+            // });
+            const data = {
+                "merchantId": "PGTESTPAYUAT",
+                "merchantTransactionId": "MT7850590068188104",
+                "merchantUserId": "MUID123",
+                "amount": total*100,
+                "redirectUrl": "http://localhost:3000/orders",
+                "redirectMode": "REDIRECT",
+                // "callbackUrl": "https://webhook.site/callback-url",
+                "mobileNumber": "9999999999",
+                "paymentInstrument": {
+                  "type": "PAY_PAGE"
+                }
+              }
+              const payload = JSON.stringify(data);
+              const payloadMain = Buffer.from(payload).toString('base64');
+              const key = "099eb0cd-02cf-4e2a-8aca-3e6c6aff0399";
+              const keyIndex = 1;
+              const string = payloadMain + '/pg/v1/pay'+key;
+              const sha256 = crypto.createHash('sha256').update(string).digest('hex');
+              const checksum = sha256 + "###" +keyIndex;
+                const options = {
+                method: 'post',
+                url: 'https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/pay',
+                headers: {
+                        accept: 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-VERIFY':checksum
+                                },
+                data: {
+                    request : payloadMain
+                }
                 };
-               }),
-               mode: 'payment',
-               success_url : req.protocol + '://' + req.get('host') + '/checkout/success',
-               cancel_url : req.protocol + '://' + req.get('host') + '/checkout/cancel'
-            });
+                axios
+                .request(options)
+                    .then(function (response) {
+                    res.redirect(response.data.data.instrumentResponse.redirectInfo.url);
+                    // return response.data;
+                })
+                .then(result=>{
+                    return req.user.clearCart();
+             })
+    //             .catch(function (error) {
+    //                 console.error(error);
+    //             });
            
-    }).then(session=>{
-        res.render('shop/checkout',{
-            path:'/checkout',
-            pageTitle:'Checkout',
-            products:products,
-            totalSum:total,
-            sessionId: session.id
-       });
+           
     })
+    // .then(session=>{
+    //     res.render('shop/checkout',{
+    //         path:'/checkout',
+    //         pageTitle:'Checkout',
+    //         products:products,
+    //         totalSum:total,
+    //         // sessionId: session.id
+    //    });
+    // })
     .catch(err=>{ 
        
         const error = new Error(err);
