@@ -1,18 +1,45 @@
 const fs = require('fs');
 const path = require('path');
+const stripe = require('stripe')('sk_test_51OizmjSJO9ruBYianYCNvo8IMGhOm3VL5i5tW8gKfgUHx9RMoX4oowg3KCF8aEzOOGiFH5bvuEwvyoWoAlEv6t1A00i9OMew0B');
 const Product = require('../models/product');
 const User = require('../models/user');
 const Order = require('../models/order');
 const PDFDocument = require('pdfkit');
-
+const session = require('express-session');
+const customer = stripe.customers.create({
+    name: 'Jenny Rosen',
+    address: {
+      line1: '510 Townsend St',
+      postal_code: '98140',
+      city: 'San Francisco',
+      state: 'CA',
+      country: 'US',
+    },
+  });
+const itemsPerPage = 2;
 exports.getIndex=(req,res,next)=>{
-   Product.find().then(
+   const page = +req.query.page||1;
+   let totalItems;
+   Product.find()
+   .countDocuments()
+   .then(numProducts=>{
+    totalItems = numProducts;
+    return Product.find()
+    .skip((page-1)*itemsPerPage)
+    .limit(itemsPerPage);
+   }).then(
     products=>{
         res.render('shop/index',{
             products:products,
             pageTitle:'Shop',
             path:'/',
-            isAuthenticated:req.session.isLoggedIn
+            isAuthenticated:req.session.isLoggedIn,
+            currentPage : page ,
+            hasNextPage: itemsPerPage*page<totalItems,
+            hasPreviousPage:page>1,
+            nextPage:page+1,
+            previousPage : page - 1,
+            lastPage : Math.ceil(totalItems/itemsPerPage)
         });
     }
    ).catch(
@@ -25,22 +52,37 @@ exports.getIndex=(req,res,next)=>{
     
 };
 exports.getProducts=(req, res, next)=>{
-    Product.find().then(
-        products=>{
-            res.render('shop/product-list',{
-                products:products,
-                pageTitle:'All products',
-                path:'/products',
-                isAuthenticated:req.session.isLoggedIn
-            });
-        }
-       ).catch(
-        err=>{
-            const error = new Error(err);
-            error.httpsStatusCode = 500;
-            return next(error);
-        }
-       ); 
+    const page = +req.query.page||1;
+   let totalItems;
+   Product.find()
+   .countDocuments()
+   .then(numProducts=>{
+    totalItems = numProducts;
+    return Product.find()
+    .skip((page-1)*itemsPerPage)
+    .limit(itemsPerPage);
+   }).then(
+    products=>{
+        res.render('shop/product-list',{
+            products:products,
+            pageTitle:'Products',
+            path:'/products',
+            isAuthenticated:req.session.isLoggedIn,
+            currentPage : page ,
+            hasNextPage: itemsPerPage*page<totalItems,
+            hasPreviousPage:page>1,
+            nextPage:page+1,
+            previousPage : page - 1,
+            lastPage : Math.ceil(totalItems/itemsPerPage)
+        });
+    }
+   ).catch(
+    err=>{
+        const error = new Error(err);
+        error.httpsStatusCode = 500;
+        return next(error);
+    }
+   ); 
 };
 
 exports.getProduct=(req,res,next)=>{
@@ -65,7 +107,7 @@ exports.getCart=(req,res,next)=>{
     .populate('cart.items.productId')
     .then(user=>{
             const products =user.cart.items;
-            console.log(products);
+            // console.log(products);
             res.render('shop/cart',{
                             path:'/cart',
                             pageTitle:'Your cart',
@@ -193,11 +235,52 @@ exports.getInvoice = (req,res,next) =>{
     }).catch(err=>next(err));
     
 };
-// // exports.getCheckout=(req,res,next)=>{
-// //      res.render('shop/checkout',{
-// //         path:'/checkout',
-// //         pageTitle:'checkout'
-// //      })
-// // };
-// //
-// // 
+
+exports.getCheckout=(req,res,next)=>{
+    let products;
+    let total = 0;
+    req.user
+    .populate('cart.items.productId')
+    .then(user=>{
+             products= user.cart.items;
+             total = 0 ;
+            products.forEach(p=>{
+                total += p.quantity * p.productId.price;
+            });
+            return stripe.checkout.sessions.create({
+               payment_method_types : ['card'],
+               line_items: products.map(p=>{
+                return {
+                    price_data :{
+                        currency : 'inr',
+                        unit_amount : p.productId.price,
+                        product_data:{
+                            name :p.productId.title,
+                            description:p.productId.desc,
+                        }
+                    },
+                    quantity : p.quantity,
+                };
+               }),
+               mode: 'payment',
+               success_url : req.protocol + '://' + req.get('host') + '/checkout/success',
+               cancel_url : req.protocol + '://' + req.get('host') + '/checkout/cancel'
+            });
+           
+    }).then(session=>{
+        res.render('shop/checkout',{
+            path:'/checkout',
+            pageTitle:'Checkout',
+            products:products,
+            totalSum:total,
+            sessionId: session.id
+       });
+    })
+    .catch(err=>{ 
+       
+        const error = new Error(err);
+        error.httpsStatusCode = 500;
+        return next(error);
+    });
+    
+};

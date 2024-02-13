@@ -180,8 +180,8 @@ exports.postEditproduct=(req,res,next)=>{
         error.httpsStatusCode = 500;
         return next(error);});
 }
-exports.postDeleteproduct=(req,res,next)=>{
-    const productId = req.body.id;
+exports.deleteproduct=(req,res,next)=>{
+    const productId = req.params.productId;
     Product.findById(productId).then(
         product => {
             if(!product){
@@ -192,11 +192,15 @@ exports.postDeleteproduct=(req,res,next)=>{
         }
     ).then(result=>{
         console.log('DESTROYED PRODUCT');
-        res.redirect('/admin/products');
+        // res.redirect('/admin/products');
+        res.status(200).json({message:'Success!'});
     })
-    .catch(err=>{ const error = new Error(err);
-        error.httpsStatusCode = 500;
-        return next(error)});
+    .catch(err=>{ 
+        res.status(500).json({message:'Deleting product failed'});
+        // const error = new Error(err);
+        // error.httpsStatusCode = 500;
+        // return next(error)
+    });
     
     
     
