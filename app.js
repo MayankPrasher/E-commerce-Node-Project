@@ -10,7 +10,7 @@ const MongoDBStore = require('connect-mongodb-session')(session);
 // const mongoConnect = require('./util/database').mongoConnect;
 const User = require('./models/user');
 
-const MONGODB_URI ='mongodb+srv://prasher6789:Mayank%401509@cluster0.dxwz3zy.mongodb.net/shop';
+const MONGODB_URI ='MONGO URL /shop';
 const app = express();
 const store = new MongoDBStore({
  uri:MONGODB_URI,
